@@ -868,6 +868,26 @@ namespace MidiSplit
             // fix some conversion problems
             foreach (MTrkChunk track in tracks)
             { 
+                // set Channal Message to 0 at end of track
+                byte targetChannel = (track.Events.FirstOrDefault() as MidiChannelMessage)?.MidiChannel ?? 0;
+                MidiFileEvent modulationEvent = new MidiControllerMessage(targetChannel, MidiControllerType.Modulation, 0);
+                MidiFileEvent sustainEvent = new MidiControllerMessage(targetChannel, MidiControllerType.Sustain, 0);
+                MidiFileEvent pitchBendEvent = new MidiPitchBendMessage(targetChannel, 0);
+                MidiFileEvent panEvent = new MidiControllerMessage(targetChannel, MidiControllerType.Pan, 64);
+                MidiFileEvent expressionEvent = new MidiControllerMessage(targetChannel, MidiControllerType.Expression, 0);
+
+                modulationEvent.AbsoluteTime = absoluteEndTime;
+                sustainEvent.AbsoluteTime = absoluteEndTime;
+                pitchBendEvent.AbsoluteTime = absoluteEndTime;
+                panEvent.AbsoluteTime = absoluteEndTime;
+                expressionEvent.AbsoluteTime = absoluteEndTime;
+                
+                (track.Events as IList<MidiFileEvent>).Add(pitchBendEvent);
+                (track.Events as IList<MidiFileEvent>).Add(modulationEvent);
+                (track.Events as IList<MidiFileEvent>).Add(sustainEvent);
+                (track.Events as IList<MidiFileEvent>).Add(panEvent);
+                (track.Events as IList<MidiFileEvent>).Add(expressionEvent);
+
                 // fixup delta time artifically...
                 MidiFileEvent midiLastEvent = null;
                 foreach (MidiFileEvent midiEvent in track.Events)
